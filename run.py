@@ -11,6 +11,10 @@ import os
 import itertools
 import re
 
+
+from collections import OrderedDict
+
+
 logging.basicConfig(level=logging.INFO)
 from optparse import OptionParser
 
@@ -27,21 +31,24 @@ ROOT.gROOT.Macro("$ROOTCOREDIR/scripts/load_packages.C")
 
 ROOT.TH1.SetDefaultSumw2() 
 
-directory = "/afs/cern.ch/work/l/leejr/public/TwoLeptonAnalysis/trees/output/"
-datadirectory = "/afs/cern.ch/work/l/leejr/public/TwoLeptonAnalysis/trees/output/"
-signaldirectory = "/afs/cern.ch/work/l/leejr/public/TwoLeptonAnalysis/trees/output/signal/"
+directory = "/afs/cern.ch/work/l/leejr/public/MergedSamples/031316a_tls/"
+datadirectory = "/afs/cern.ch/work/l/leejr/public/MergedSamples/031316a_tls/"
+signaldirectory = "/afs/cern.ch/work/l/leejr/public/MergedSamples/031316a_tls/signal/"
 
 
-treename = "treesSR"
+treename = "trees_SR_"
+
+defaultweight = "(normweight*mcEventWeight*elSF*muSF)"
+
 
 my_SHs = {}
 for sampleHandlerName in [
-					"qcd",
+					# "qcd",
 					"top",
 					"wjets",
 					"zjets",
 					"diboson",
-					"electroweak",
+					# "electroweak",
 							]:
 
 	print sampleHandlerName
@@ -70,61 +77,9 @@ commonPlots2D  = {
 }
 
 
-
-for sampleHandlerName in [
-						# "371543",
-						# "370015",
-						# "371693",
-						# "371695",
-						# "371533",
-						"371686",
-						"371519",
-						"371520",
-						"371521",
-						"371522",
-						# "SS_direct",
-						# "GG_direct",
-						# "GG_onestepCC_fullsim"
-							]:
-
-	# f = ROOT.TFile("%s/%s.root"%(signaldirectory,sampleHandlerName) )
-	# treeList = []
-	# dirList = ROOT.gDirectory.GetListOfKeys()
-	# for k1 in dirList: 
-	# 	t1 = k1.ReadObj()
-	# 	if (type(t1) is ROOT.TTree  ):
-	# 		# print t1.GetName()
-	# 		treeList.append(t1.GetName())
-
-	# for treeName in treeList:
-	# 	if treename in treeName:
-	# 		print treeName
-	my_SHs[sampleHandlerName] = ROOT.SH.SampleHandler(); 
-	ROOT.SH.ScanDir().sampleDepth(0).samplePattern("%s.root"%sampleHandlerName).scan(my_SHs[sampleHandlerName], signaldirectory)
-	my_SHs[sampleHandlerName].setMetaString("nc_tree", "%s"%treename )
-
-
-
-# for sampleHandlerName in [
-# 						"Data_Nov11",
-# 							]:
-# 	f = ROOT.TFile("%s/%s.root"%(datadirectory,sampleHandlerName) )
-# 	treeList = []
-# 	dirList = ROOT.gDirectory.GetListOfKeys()
-# 	for k1 in dirList: 
-# 		t1 = k1.ReadObj()
-# 		if (type(t1) is ROOT.TTree  ):
-# 			print t1.GetName()
-# 			print t1.GetEntries()
-# 			treeList.append(t1.GetName())
-
-# 	for treeName in treeList:
-# 		if treename in treeName:
-# 			print treeName
-# 			my_SHs[treeName] = ROOT.SH.SampleHandler(); 
-# 			ROOT.SH.ScanDir().sampleDepth(0).samplePattern("%s.root"%sampleHandlerName).scan(my_SHs[treeName], datadirectory)
-# 			my_SHs[treeName].setMetaString("nc_tree", "%s"%treeName )
-
+my_SHs["signal"] = ROOT.SH.SampleHandler(); 
+ROOT.SH.ScanDir().sampleDepth(0).samplePattern("*.root").scan(my_SHs["signal"], signaldirectory)
+my_SHs["signal"].setMetaString("nc_tree", "%s"%treename )
 
 
 
@@ -133,106 +88,84 @@ baseline = "(1)"
 
 
 cuts = {}
-limits = {}
 
 
-## ZL Team
+cuts["SRTestCo"] = OrderedDict()
+cuts["SRTestCo"]["( H3PP > 0 )"]         =  (50,0,2000e3)        
+cuts["SRTestCo"]["( met > 100e3 )"]      =  (50,0,2000e3)           
+cuts["SRTestCo"]["( PIoHT1CM > 0.5 )"]   =  (50,0,1.2)                 
+cuts["SRTestCo"]["( NJa+NJb > 2 )"]      =  (15,0,15)               
+cuts["SRTestCo"]["( RPT_HT1CM < 0.25 )"] =  (50,0,1.2)                   
+cuts["SRTestCo"]["( MS > 50e3 )"]        =  (50,0,1000e3)         
+cuts["SRTestCo"]["( cosS > 0.5 )"]       =  (50,0,1.2)             
+cuts["SRTestCo"]["( NVS > 2 )"]          =  (15,0,15)           
+cuts["SRTestCo"]["( HT1CM > 200e3)"]     =  (50,0,1000e3)            
+cuts["SRTestCo"]["( isSS < 1 )"]         =  (2,0,2)             
+cuts["SRTestCo"]["( isSF > 0 )"]         =  (2,0,2)             
+cuts["SRTestCo"]["( isSameHemi > -1 )"]  =  (2,0,2)                    
+cuts["SRTestCo"]["( cosLINV_0 < 1. )"]   =  (50,-1,1)                  
+cuts["SRTestCo"]["( cosLINV_1 < 1. )"]   =  (50,-1,1)                  
+cuts["SRTestCo"]["( dphiCML_0 > 0 )"]    =  (50,-1,4)                 
+cuts["SRTestCo"]["( dphiCML_1 > 0 )"]    =  (50,-1,4)                 
+cuts["SRTestCo"]["( dphiCMV > 1 )"]      =  (50,-1,4) 
+
+cuts["SRTestCoEdge"] = OrderedDict()
+cuts["SRTestCoEdge"]["( H3PP > 0 )"]         =  (50,0,2000e3)    
+cuts["SRTestCoEdge"]["( met > 300e3 )"]      =  (50,0,2000e3)       
+cuts["SRTestCoEdge"]["( PIoHT1CM > 0.6 )"]   =  (50,0,1.2)             
+cuts["SRTestCoEdge"]["( NJa+NJb > 4 )"]      =  (15,0,15)           
+cuts["SRTestCoEdge"]["( RPT_HT1CM < 0.25 )"] =  (50,0,1.2)               
+cuts["SRTestCoEdge"]["( MS > 100e3 )"]       =  (50,0,1000e3)      
+cuts["SRTestCoEdge"]["( cosS > 0 )"]         =  (50,0,1.2)       
+cuts["SRTestCoEdge"]["( NVS > 2 )"]          =  (15,0,15)       
+cuts["SRTestCoEdge"]["( HT1CM > 200e3)"]     =  (50,0,1000e3)        
+cuts["SRTestCoEdge"]["( isSS < 1 )"]         =  (2,0,2)         
+cuts["SRTestCoEdge"]["( isSF > 0 )"]         =  (2,0,2)         
+cuts["SRTestCoEdge"]["( isSameHemi > 0 )"]   =  (2,0,2)               
+cuts["SRTestCoEdge"]["( cosLINV_0 < -0.7 )"] =  (50,-1,1)                
+cuts["SRTestCoEdge"]["( cosLINV_1 < -0.7 )"] =  (50,-1,1)                
+cuts["SRTestCoEdge"]["( dphiCML_0 > 0 )"]    =  (50,-1,4)             
+cuts["SRTestCoEdge"]["( dphiCML_1 > 0 )"]    =  (50,-1,4)             
+cuts["SRTestCoEdge"]["( dphiCMV > 0 )"]      =  (50,-1,4)           
 
 
-cuts["SRTest"] = []
-cuts["SRTest"] += ["( met > 150e3 )"]
-cuts["SRTest"] += ["( H2PP > 0. )"]
-cuts["SRTest"] += ["( H6PP > 1e6 )"]
-# cuts["SRTest"] += ["( R_H2PP_H3PP < 0.8 )"]
-cuts["SRTest"] += ["( R_H2PP_H5PP > 0.2 )"]
-cuts["SRTest"] += ["( R_H2PP_H5PP < 0.8 )"]
-cuts["SRTest"] += ["( RPZ_HT5PP < 0.7 )"]
-# cuts["SRTest"] += ["( sangle < 0.3 )"]
-cuts["SRTest"] += ["( PP_InvGamma > 0.1 )"]
-cuts["SRTest"] += ["( abs(P1_CosTheta) < 0.9 )"]
-cuts["SRTest"] += ["( PIoHT1CM > 0. )"]
-cuts["SRTest"] += ["( NJa+NJb > 4 )"]
-
-limits["SRTest"] = []
-limits["SRTest"] +=  [(50,0,2000e3)]     #["( MET > 200 )"]
-limits["SRTest"] +=  [(50,0,2000e3)]     #["( pT_jet1 > 200 )"]
-limits["SRTest"] +=  [(50,0,2000e3)]     #["( pT_jet2 > 100 )"]
-limits["SRTest"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTest"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTest"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-# limits["SRTest"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTest"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTest"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTest"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTest"] +=  [(15,0,15)]     #["( dphi > 0.4 )"]
-
-
-cuts["SRTestCo"] = []
-# cuts["SRTestCo"] += ["( met > 150e3 )"]
-# cuts["SRTestCo"] += ["( H2PP > 0. )"]
-# cuts["SRTestCo"] += ["( H6PP > 1e6 )"]
-# cuts["SRTestCo"] += ["( R_H2PP_H3PP < 0.8 )"]
-# cuts["SRTestCo"] += ["( R_H2PP_H5PP > 0.2 )"]
-# cuts["SRTestCo"] += ["( R_H2PP_H5PP < 0.8 )"]
-# cuts["SRTestCo"] += ["( RPZ_HT5PP < 0.7 )"]
-# cuts["SRTestCo"] += ["( sangle < 0.3 )"]
-# cuts["SRTestCo"] += ["( PP_InvGamma > 0.1 )"]
-# cuts["SRTestCo"] += ["( abs(P1_CosTheta) < 0.9 )"]
-cuts["SRTestCo"] += ["( PIoHT1CM > 0.5 )"]
-cuts["SRTestCo"] += ["( NJa+NJb > 5 )"]
-cuts["SRTestCo"] += ["( RPT_HT1CM < 0.15 )"]
-cuts["SRTestCo"] += ["( MS > 50e3 )"]
-cuts["SRTestCo"] += ["( cosS > 0.5 )"]
-# cuts["SRTestCo"] += ["( NVS > -1 )"]
-cuts["SRTestCo"] += ["( HT1CM > 200e3)"]
-cuts["SRTestCo"] += ["( met > 200e3 )"]
-
-
-limits["SRTestCo"] = []
-# limits["SRTestCo"] +=  [(50,0,2000e3)]     #["( MET > 200 )"]
-# limits["SRTestCo"] +=  [(50,0,2000e3)]     #["( pT_jet1 > 200 )"]
-# limits["SRTestCo"] +=  [(50,0,2000e3)]     #["( pT_jet2 > 100 )"]
-# limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-# limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-# limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-# limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-# limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-# limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTestCo"] +=  [(15,0,15)]     #["( dphi > 0.4 )"]
-limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-limits["SRTestCo"] +=  [(50,0,1000e3)]     #["( dphi > 0.4 )"]
-limits["SRTestCo"] +=  [(50,0,1.2)]     #["( dphi > 0.4 )"]
-# limits["SRTestCo"] +=  [(15,0,15)]     #["( dphi > 0.4 )"]
-limits["SRTestCo"] +=  [(50,0,1000e3)]     #["( dphi > 0.4 )"]
-limits["SRTestCo"] +=  [(50,0,1000e3)]     #["( dphi > 0.4 )"]
-
-
-
-# cuts["SR2jl"] = []
-# cuts["SR2jl"] += ["( MET > 200 )"]
-# cuts["SR2jl"] += ["( pT_jet1 > 200 )"]
-# cuts["SR2jl"] += ["( pT_jet2 > 200 )"]
-# cuts["SR2jl"] += ["( dphi > 0.8 )"]
-# cuts["SR2jl"] += ["( MET/sqrt(Meff-MET) > 15 )"]
-# cuts["SR2jl"] += ["( Meff > 1200 )"]
-
-# limits["SR2jl"] = []
-# limits["SR2jl"] +=  [(50,0,1000)]     #["( MET > 200 )"]
-# limits["SR2jl"] +=  [(50,0,1000)]     #["( pT_jet1 > 200 )"]
-# limits["SR2jl"] +=  [(50,0,1000)]     #["( pT_jet2 > 100 )"]
-# limits["SR2jl"] +=  [(50,0,4)]     #["( dphi > 0.4 )"]
-# limits["SR2jl"] +=  [(50,0,50)]     #["( MET/(MET+pT_jet1+pT_jet2+pT_jet3+pT_jet4+pT_jet5) > 0.25 )"]
-# limits["SR2jl"] +=  [(50,0,4000)]     #["( Meff > 1600 )"]
+cuts["SRTestOneStep"] = OrderedDict()
+cuts["SRTestOneStep"]["( H2PP > 100e3 )"]          = (50,0,2000e3)   
+cuts["SRTestOneStep"]["( H3PP > 500e3 )"]          = (50,0,2000e3)   
+cuts["SRTestOneStep"]["( R_H2PP_H5PP > 0.1 )"]          = (50,0,2000e3)   
+cuts["SRTestOneStep"]["( met > 50e3 )"]       = (50,0,2000e3)      
+cuts["SRTestOneStep"]["( NJa+NJb > 5 )"]       = (15,0,15)          
+cuts["SRTestOneStep"]["( RPT_HT5PP < 0.07 )"]   = (50,0,0.5)             
+# cuts["SRTestOneStep"]["( MS > 100e3 )"]        = (50,0,1000e3)     
+# cuts["SRTestOneStep"]["( cosS > 0 )"]          = (50,0,1.2)      
+# cuts["SRTestOneStep"]["( NVS > 2 )"]           = (15,0,15)      
+# cuts["SRTestOneStep"]["( HT1CM > 200e3)"]      = (50,0,1000e3)       
+cuts["SRTestOneStep"]["( isSS < 1 )"]          = (2,0,2)    
+# cuts["SRTestOneStep"]["( isSF < 1 )"]          = (2,0,2)    
+# cuts["SRTestOneStep"]["( isSameHemi < 1 )"]    = (2,0,2)          
+# cuts["SRTestOneStep"]["( cosLINV_0 < -0.4 )"]  = (50,-1,1)               
+# cuts["SRTestOneStep"]["( cosLINV_1 < -0.4 )"]  = (50,-1,1)           
+# cuts["SRTestOneStep"] += ["( met > 200e3 )"]
+cuts["SRTestOneStep"]["( maxR_H1PPi_H2PPi > 0.7 )"]          = (50,0,1) 
+cuts["SRTestOneStep"]["( PP_MDeltaR > 100e3 )"]          = (50,0,2e6)    
+cuts["SRTestOneStep"]["( PP_dPhiVis > 2 )"]          = (50,0,4)    
+cuts["SRTestOneStep"]["( P1_CosTheta > -1 )"]          = (50,-1,1)    
 
 
 
 ## Define your cut strings here....
 regions = {
-	"no_cut": "(1)",
+	# "no_cut": "(1)",
 
-	"SRTest": "*".join( ["(%s)"%mycut for mycut in cuts["SRTest"] ]),
-	"SRTestCo": "*".join( ["(%s)"%mycut for mycut in cuts["SRTestCo"] ]),
+	"SRTestCo": "*".join(  cuts["SRTestCo"].keys() ),
+	"SRTestCoEdge": "*".join(  cuts["SRTestCoEdge"].keys() ),
+	"SRTestOneStep": "*".join(  cuts["SRTestOneStep"].keys() ),
+
+
+	# "SRTest": "*".join( ["(%s)"%mycut for mycut in cuts["SRTest"] ]),
+	# "SRTestCo": "*".join( ["(%s)"%mycut for mycut in cuts["SRTestCo"] ]),
+	# "SRTestCoEdge": "*".join( ["(%s)"%mycut for mycut in cuts["SRTestCoEdge"] ]),
+	# "SRTestOneStep": "*".join( ["(%s)"%mycut for mycut in cuts["SRTestOneStep"] ]),
 
 }
 
@@ -245,12 +178,12 @@ for SH_name, mysamplehandler in my_SHs.iteritems():
 	cutflow = {}
 
 
-	weightstring = "(1)" if "Data" in SH_name else "normweight"
+	weightstring = "(1)" if "Data" in SH_name else defaultweight
 	if "CRWT" in treename:
 		weightstring = weightstring + "*(bTagWeight)"
 
 	if "CRY" in treename:
-		weightstring = weightstring + "*(phSignal[0]==1 && phPt[0]>130.)*(1.6)"
+		weightstring = weightstring + "*(phSignal[0]==1 && phPt[0]>130.)"
 
 	for region in regions:
 
@@ -261,57 +194,30 @@ for SH_name, mysamplehandler in my_SHs.iteritems():
 			cutflow[region].GetXaxis().SetBinLabel(1, weightstring);
 			cutflow[region].GetXaxis().SetBinLabel(2, baseline);
 
-			for i,cutpart in enumerate(cuts[region]):
+			for i,cutpart in enumerate(cuts[region].keys() ):
 
 				cutpartname = cutpart.translate(None, " (),.").replace("*","_x_").replace("/","_over_").split(" < ")[0].split(" > ")[0]
 				variablename = cutpart.split("<")[0].split(">")[0]+")"
 
 				if "Data" not in SH_name:
-					job.algsAdd (ROOT.MD.AlgHist(ROOT.TH1F("%s_minus_%s"%(region,cutpartname), "%s_%s"%(region,cutpartname), limits[region][i][0], limits[region][i][1], limits[region][i][2] ), variablename ,baseline+"*"+weightstring+"*%s"%"*".join(["(%s)"%mycut for mycut in cuts[region] if mycut!=cutpart ])    )        )
+					job.algsAdd (ROOT.MD.AlgHist(ROOT.TH1F("%s_minus_%s"%(region,cutpartname), "%s_%s"%(region,cutpartname), cuts[region][cutpart][0], cuts[region][cutpart][1], cuts[region][cutpart][2] ), variablename ,baseline+"*"+weightstring+"*%s"%"*".join([ x for x in cuts[region].keys() if x!=cutpart ])    )        )
 				else:
 					flippedcutpart = cutpart.replace(">","%TEMP%").replace("<",">").replace("%TEMP%","<")
-					job.algsAdd (ROOT.MD.AlgHist(ROOT.TH1F("%s_minus_%s"%(region,cutpartname), "%s_%s"%(region,cutpartname), limits[region][i][0], limits[region][i][1], limits[region][i][2] ), variablename ,baseline+"*"+weightstring+"*%s"%"*".join(["(%s)"%mycut for mycut in cuts[region] if mycut!=cutpart ]) + "*" + flippedcutpart  )        )
+					job.algsAdd (ROOT.MD.AlgHist(ROOT.TH1F("%s_minus_%s"%(region,cutpartname), "%s_%s"%(region,cutpartname), cuts[region][cutpart][0], cuts[region][cutpart][1], cuts[region][cutpart][2] ), variablename ,baseline+"*"+weightstring+"*%s"%"*".join([x for x in cuts[region].keys() if x!=cutpart ]) + "*" + flippedcutpart  )        )
 
 				cutflow[region].GetXaxis().SetBinLabel (i+3, cutpart);
 
 			job.algsAdd(ROOT.MD.AlgCFlow (cutflow[region]))
 
-
-		if "CR" in region:
-			# ## This part sets up both N-1 hists and the cutflow histogram for region
-
-			cutflow[region] = ROOT.TH1F ("cutflow_%s"%region, "cutflow_%s"%region, len(cuts[region])+2 , 0, len(cuts[region])+2 );
-			cutflow[region].GetXaxis().SetBinLabel(1, weightstring);
-			cutflow[region].GetXaxis().SetBinLabel(2, baseline);
-
-			for i,cutpart in enumerate(cuts[region]):
-
-				cutpartname = cutpart.translate(None, " (),.").replace("*","_x_").replace("/","_over_").split(" < ")[0].split(" > ")[0]
-				variablename = cutpart.split("<")[0].split(">")[0]+")"
-
-				job.algsAdd (ROOT.MD.AlgHist(ROOT.TH1F("%s_minus_%s"%(region,cutpartname), "%s_%s"%(region,cutpartname), limits[region][i][0], limits[region][i][1], limits[region][i][2] ), variablename ,baseline+"*"+weightstring+"*%s"%"*".join(["(%s)"%mycut for mycut in cuts[region] if mycut!=cutpart ])    )        )
-
-				cutflow[region].GetXaxis().SetBinLabel (i+3, cutpart);
-
-			job.algsAdd(ROOT.MD.AlgCFlow (cutflow[region]))
-
-		###################################################################
-
-		## each of this histograms will be made for each region
-
-		if not('QCD' in region):
-			for varname,varlimits in commonPlots.items() :
-				# print varname
-				job.algsAdd(
-	            	ROOT.MD.AlgHist(
-	            		ROOT.TH1F(varname+"_%s"%region, varname+"_%s"%region, varlimits[0], varlimits[1], varlimits[2]),
-						varname,
-						weightstring+"*%s"%regions[region]
-						)
+		for varname,varlimits in commonPlots.items() :
+			# print varname
+			job.algsAdd(
+            	ROOT.MD.AlgHist(
+            		ROOT.TH1F(varname+"_%s"%region, varname+"_%s"%region, varlimits[0], varlimits[1], varlimits[2]),
+					varname,
+					weightstring+"*%s"%regions[region]
 					)
-
-
-		# if "QCD" in region:
+				)
 
 		for varname,varlimits in commonPlots2D.items():
 			# print varname
